@@ -1,1 +1,1 @@
-export * from './firesql';
+export * from './firequery';

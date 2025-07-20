@@ -1,18 +1,18 @@
 import { Firestore } from '@google-cloud/firestore';
-import { FireSQL } from '../src/firesql';
+import { FireQuery } from '../src/firequery';
 import { initFirestore } from './helpers/utils';
 
 let firestore: Firestore;
-let fireSQL: FireSQL;
+let fireQuery: FireQuery;
 
 beforeAll(() => {
   firestore = initFirestore();
-  fireSQL = new FireSQL(firestore);
+  fireQuery = new FireQuery(firestore);
 });
 
 describe('Method query()', () => {
   it('returns a Promise', () => {
-    const returnValue = fireSQL.query('SELECT * FROM nonExistantCollection');
+    const returnValue = fireQuery.query('SELECT * FROM nonExistantCollection');
     // tslint:disable-next-line: no-floating-promises
     expect(returnValue).toBeInstanceOf(Promise);
   });
@@ -21,19 +21,19 @@ describe('Method query()', () => {
     expect.assertions(3);
 
     try {
-      await (fireSQL as any).query();
+      await (fireQuery as any).query();
     } catch (err) {
       expect(err).not.toBeUndefined();
     }
 
     try {
-      await (fireSQL as any).query('');
+      await (fireQuery as any).query('');
     } catch (err) {
       expect(err).not.toBeUndefined();
     }
 
     try {
-      await (fireSQL as any).query(42);
+      await (fireQuery as any).query(42);
     } catch (err) {
       expect(err).not.toBeUndefined();
     }
@@ -42,7 +42,7 @@ describe('Method query()', () => {
   it('accepts options as second argument', async () => {
     expect.assertions(1);
 
-    const returnValue = fireSQL.query('SELECT * FROM nonExistantCollection', {
+    const returnValue = fireQuery.query('SELECT * FROM nonExistantCollection', {
       includeId: true
     });
 
@@ -62,7 +62,7 @@ describe('Method query()', () => {
     expect.assertions(2);
 
     try {
-      await fireSQL.query('not a valid query');
+      await fireQuery.query('not a valid query');
     } catch (err) {
       expect(err).toBeInstanceOf(Error);
       expect(err).toHaveProperty('name', 'SyntaxError');

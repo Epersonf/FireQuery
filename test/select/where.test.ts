@@ -1,14 +1,14 @@
-import { FireSQL } from '../../src/firesql';
+import { FireQuery } from '../../src/firequery';
 import { initFirestore } from '../helpers/utils';
 import { DOCUMENT_KEY_NAME } from '../../src/utils';
 import { Firestore } from '@google-cloud/firestore';
 
 let firestore: Firestore;
-let fireSQL: FireSQL;
+let fireQuery: FireQuery;
 
 beforeAll(() => {
   firestore = initFirestore();
-  fireSQL = new FireSQL(firestore);
+  fireQuery = new FireQuery(firestore);
 });
 
 // 'SELECT * FROM cities',
@@ -31,7 +31,7 @@ describe('WHERE', () => {
     expect.assertions(2);
 
     try {
-      await fireSQL.query('SELECT * FROM shops WHERE');
+      await fireQuery.query('SELECT * FROM shops WHERE');
     } catch (err) {
       expect(err).toBeInstanceOf(Error);
       expect(err).toHaveProperty('name', 'SyntaxError');
@@ -41,7 +41,7 @@ describe('WHERE', () => {
   test('non-existant collection returns no documents', async () => {
     expect.assertions(2);
 
-    const docs = await fireSQL.query('SELECT * FROM nonExistantCollection');
+    const docs = await fireQuery.query('SELECT * FROM nonExistantCollection');
 
     expect(docs).toBeInstanceOf(Array);
     expect(docs).toHaveLength(0);
@@ -50,7 +50,7 @@ describe('WHERE', () => {
   test('"=" condition', async () => {
     expect.assertions(1);
 
-    const docs = await fireSQL.query(`
+    const docs = await fireQuery.query(`
       SELECT category, name
       FROM shops
       WHERE category = 'Toys'
@@ -75,7 +75,7 @@ describe('WHERE', () => {
   test('"<" condition', async () => {
     expect.assertions(1);
 
-    const docs = await fireSQL.query(`
+    const docs = await fireQuery.query(`
       SELECT category, name
       FROM shops
       WHERE rating < 0.3
@@ -92,7 +92,7 @@ describe('WHERE', () => {
   test('">" condition', async () => {
     expect.assertions(1);
 
-    const docs = await fireSQL.query(`
+    const docs = await fireQuery.query(`
       SELECT category, name
       FROM shops
       WHERE rating > 4.8
@@ -109,7 +109,7 @@ describe('WHERE', () => {
   test('"<=" condition', async () => {
     expect.assertions(1);
 
-    const docs = await fireSQL.query(`
+    const docs = await fireQuery.query(`
       SELECT category, name
       FROM shops
       WHERE rating <= 0.4
@@ -138,7 +138,7 @@ describe('WHERE', () => {
   test('">=" condition', async () => {
     expect.assertions(1);
 
-    const docs = await fireSQL.query(`
+    const docs = await fireQuery.query(`
       SELECT category, name
       FROM shops
       WHERE rating >= 4.8
@@ -163,7 +163,7 @@ describe('WHERE', () => {
   test('"!=" condition', async () => {
     expect.assertions(1);
 
-    const docs = await new FireSQL(
+    const docs = await new FireQuery(
       firestore.doc('/shops/mEjD3yDXz2Her0OtIGGMeZGx')
     ).query(`
       SELECT *
@@ -188,7 +188,7 @@ describe('WHERE', () => {
   test('"IN" condition', async () => {
     expect.assertions(1);
 
-    const docs = await fireSQL.query(`
+    const docs = await fireQuery.query(`
       SELECT \`contact.postal\`, \`contact.state\`, name
       FROM shops
       WHERE \`contact.postal\` IN ('32204', '95813')
@@ -211,7 +211,7 @@ describe('WHERE', () => {
   test('"BETWEEN" condition', async () => {
     expect.assertions(1);
 
-    const docs = await fireSQL.query(`
+    const docs = await fireQuery.query(`
       SELECT name, rating
       FROM shops
       WHERE rating BETWEEN 3.1 AND 3.3
@@ -240,7 +240,7 @@ describe('WHERE', () => {
   test('"LIKE \'value%\'" condition (begins with)', async () => {
     expect.assertions(1);
 
-    const docs = await fireSQL.query(`
+    const docs = await fireQuery.query(`
       SELECT name, category
       FROM shops
       WHERE name LIKE 'Wa%'
@@ -265,13 +265,13 @@ describe('WHERE', () => {
   test('"LIKE \'value\'" condition behaves like "="', async () => {
     expect.assertions(1);
 
-    const docs1 = await fireSQL.query(`
+    const docs1 = await fireQuery.query(`
       SELECT category, name
       FROM shops
       WHERE category = 'Toys'
     `);
 
-    const docs2 = await fireSQL.query(`
+    const docs2 = await fireQuery.query(`
       SELECT category, name
       FROM shops
       WHERE category LIKE 'Toys'
@@ -283,13 +283,13 @@ describe('WHERE', () => {
   test('"IS" condition behaves like "="', async () => {
     expect.assertions(1);
 
-    const docs1 = await fireSQL.query(`
+    const docs1 = await fireQuery.query(`
       SELECT category, name
       FROM shops
       WHERE category = 'Toys'
     `);
 
-    const docs2 = await fireSQL.query(`
+    const docs2 = await fireQuery.query(`
       SELECT category, name
       FROM shops
       WHERE category IS 'Toys'
@@ -301,7 +301,7 @@ describe('WHERE', () => {
   test('"AND" operator', async () => {
     expect.assertions(1);
 
-    const docs = await fireSQL.query(`
+    const docs = await fireQuery.query(`
       SELECT name, slogan
       FROM shops
       WHERE rating = 4 AND category = 'Toys'
@@ -318,7 +318,7 @@ describe('WHERE', () => {
   test('"OR" operator', async () => {
     expect.assertions(1);
 
-    const docs = await fireSQL.query(`
+    const docs = await fireQuery.query(`
       SELECT name, slogan
       FROM shops
       WHERE rating = 4 OR category = 'Toys'
@@ -351,7 +351,7 @@ describe('WHERE', () => {
   test('multiple nested operators', async () => {
     expect.assertions(1);
 
-    const docs = await fireSQL.query(`
+    const docs = await fireQuery.query(`
       SELECT name, rating, category, \`contact.state\`
       FROM shops
       WHERE rating < 2
@@ -387,7 +387,7 @@ describe('WHERE', () => {
   it('filters by document key when using "__name__"', async () => {
     expect.assertions(1);
 
-    const docs = await fireSQL.query(`
+    const docs = await fireQuery.query(`
       SELECT name
       FROM shops
       WHERE ${DOCUMENT_KEY_NAME} = 'A2AwXRvhW3HmEivfS5LPH3s8'
@@ -403,7 +403,7 @@ describe('WHERE', () => {
   test('"CONTAINS" condition', async () => {
     expect.assertions(3);
 
-    const docs = await fireSQL.query(`
+    const docs = await fireQuery.query(`
       SELECT category, name, tags
       FROM shops
       WHERE tags CONTAINS "content-based"

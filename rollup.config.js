@@ -7,7 +7,7 @@ import { uglify } from 'rollup-plugin-uglify';
 
 const pkg = require('./package.json');
 
-const libraryName = 'firesql';
+const libraryName = 'firequery';
 
 const createConfig = ({ umd = false, input, output, external } = {}) => ({
   input,
@@ -64,7 +64,7 @@ export default [
     input: 'src/index.umd.ts',
     umd: true,
     output: {
-      file: 'out/firesql.umd.js',
+      file: 'out/firequery.umd.js',
       format: 'umd',
       name: camelCase(libraryName),
       globals: {
@@ -76,7 +76,7 @@ export default [
       },
       sourcemap: true,
       footer:
-        'var FireSQL = (typeof firesql !== "undefined") && firesql.FireSQL;'
+        'var FireQuery = (typeof firequery !== "undefined") && firequery.FireQuery;'
     }
   })
 ];

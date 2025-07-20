@@ -1,5 +1,5 @@
-export interface FireSQLOptions {
+export interface FireQueryOptions {
   includeId?: boolean | string;
 }
 
-export interface QueryOptions extends FireSQLOptions {}
+export interface QueryOptions extends FireQueryOptions {}

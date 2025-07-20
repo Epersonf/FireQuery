@@ -1,24 +1,24 @@
 // import admin from 'firebase-admin';
-import { FireSQL } from '../../src/firesql';
+import { FireQuery } from '../../src/firequery';
 import { initFirestore /*, initAdminFirestore*/ } from '../helpers/utils';
 import { DOCUMENT_KEY_NAME } from '../../src/utils';
 import { Firestore } from '@google-cloud/firestore';
 
 // let adminFirestore: admin.firestore.Firestore;
 let firestore: Firestore;
-let fireSQL: FireSQL;
+let fireQuery: FireQuery;
 
 beforeAll(() => {
   // adminFirestore = initAdminFirestore();
   firestore = initFirestore();
-  fireSQL = new FireSQL(firestore);
+  fireQuery = new FireQuery(firestore);
 });
 
 describe('SELECT', () => {
   it('returns no documents from non-existant collection', async () => {
     expect.assertions(2);
 
-    const docs = await fireSQL.query('SELECT * FROM nonExistantCollection');
+    const docs = await fireQuery.query('SELECT * FROM nonExistantCollection');
 
     expect(docs).toBeInstanceOf(Array);
     expect(docs).toHaveLength(0);
@@ -28,7 +28,7 @@ describe('SELECT', () => {
     expect.assertions(2);
 
     try {
-      await fireSQL.query('SELECT * FROM');
+      await fireQuery.query('SELECT * FROM');
     } catch (err) {
       expect(err).toBeInstanceOf(Error);
       expect(err).toHaveProperty('name', 'SyntaxError');
@@ -38,7 +38,7 @@ describe('SELECT', () => {
   test('without conditions returns the correct documents', async () => {
     expect.assertions(3);
 
-    const docs = await new FireSQL(
+    const docs = await new FireQuery(
       firestore.doc('shops/2DIHCbOMkKz0YcrKUsRf6kgF')
     ).query('SELECT * FROM products');
 
@@ -75,7 +75,7 @@ describe('SELECT', () => {
   // it('returns the correct documents using firebase-admin', async () => {
   //   expect.assertions(3);
 
-  //   const docs = await new FireSQL(
+  //   const docs = await new FireQuery(
   //     adminFirestore.doc('shops/2DIHCbOMkKz0YcrKUsRf6kgF')
   //   ).query('SELECT * FROM products');
 
@@ -112,7 +112,7 @@ describe('SELECT', () => {
   test('with "*" returns all fields', async () => {
     expect.assertions(2);
 
-    const docs = await fireSQL.query(`
+    const docs = await fireQuery.query(`
       SELECT *
       FROM shops
       WHERE name = 'Beer LLC'
@@ -140,7 +140,7 @@ describe('SELECT', () => {
   test('with field list returns only those fields', async () => {
     expect.assertions(2);
 
-    const docs = await fireSQL.query(`
+    const docs = await fireQuery.query(`
       SELECT category, rating, \`manager.name\`
       FROM shops
       WHERE name = 'Beer LLC'
@@ -159,7 +159,7 @@ describe('SELECT', () => {
   test('with field alias', async () => {
     expect.assertions(2);
 
-    const docs = await fireSQL.query(`
+    const docs = await fireQuery.query(`
       SELECT name AS aliasedName
       FROM shops
       WHERE name = 'Beer LLC'
@@ -176,7 +176,7 @@ describe('SELECT', () => {
   it('returns document id with global includeId=true option', async () => {
     expect.assertions(2);
 
-    const docs = await new FireSQL(fireSQL.ref, { includeId: true }).query(`
+    const docs = await new FireQuery(fireQuery.ref, { includeId: true }).query(`
       SELECT *
       FROM shops
       WHERE name = 'Beer LLC'
@@ -192,7 +192,7 @@ describe('SELECT', () => {
   it('returns document id with query includeId=true option', async () => {
     expect.assertions(2);
 
-    const docs = await fireSQL.query(
+    const docs = await fireQuery.query(
       `
       SELECT *
       FROM shops
@@ -211,7 +211,7 @@ describe('SELECT', () => {
   it("doesn't return document id with query includeId=false and global includeId=true", async () => {
     expect.assertions(2);
 
-    const docs = await new FireSQL(fireSQL.ref, { includeId: true }).query(
+    const docs = await new FireQuery(fireQuery.ref, { includeId: true }).query(
       `
       SELECT *
       FROM shops
@@ -227,7 +227,7 @@ describe('SELECT', () => {
   it('returns document id with global includeId="alias" option', async () => {
     expect.assertions(3);
 
-    const docs = await new FireSQL(fireSQL.ref, { includeId: 'docIdAlias' })
+    const docs = await new FireQuery(fireQuery.ref, { includeId: 'docIdAlias' })
       .query(`
       SELECT *
       FROM shops
@@ -242,7 +242,7 @@ describe('SELECT', () => {
   it('returns document id with query includeId="alias" option', async () => {
     expect.assertions(3);
 
-    const docs = await fireSQL.query(
+    const docs = await fireQuery.query(
       `
       SELECT *
       FROM shops
@@ -259,7 +259,7 @@ describe('SELECT', () => {
   it('returns document id with includeId=true even if not in SELECTed fields', async () => {
     expect.assertions(2);
 
-    const docs = await fireSQL.query(
+    const docs = await fireQuery.query(
       `
       SELECT rating
       FROM shops
@@ -278,7 +278,7 @@ describe('SELECT', () => {
   test('"__name__" returns the document key', async () => {
     expect.assertions(2);
 
-    const docs = await fireSQL.query(`
+    const docs = await fireQuery.query(`
       SELECT ${DOCUMENT_KEY_NAME}
       FROM shops
       WHERE name = 'Simonis, Howe and Kovacek'
@@ -294,7 +294,7 @@ describe('SELECT', () => {
   test('"__name__" can be aliased', async () => {
     expect.assertions(3);
 
-    const docs = await fireSQL.query(`
+    const docs = await fireQuery.query(`
       SELECT ${DOCUMENT_KEY_NAME} AS docIdAlias
       FROM shops
       WHERE name = 'Simonis, Howe and Kovacek'
@@ -308,21 +308,21 @@ describe('SELECT', () => {
   it('filters duplicate documents from combined queries', async () => {
     expect.assertions(3);
 
-    const docs1 = await fireSQL.query(`
+    const docs1 = await fireQuery.query(`
         SELECT *
         FROM shops
         WHERE category = 'Toys'
     `);
     expect(docs1).toHaveLength(3);
 
-    const docs2 = await fireSQL.query(`
+    const docs2 = await fireQuery.query(`
         SELECT *
         FROM shops
         WHERE rating > 3
     `);
     expect(docs2).toHaveLength(20);
 
-    const docs3 = await fireSQL.query(`
+    const docs3 = await fireQuery.query(`
         SELECT *
         FROM shops
         WHERE category = 'Toys' OR rating > 3
@@ -333,7 +333,7 @@ describe('SELECT', () => {
   test('collection group query returns the correct documents', async () => {
     expect.assertions(3);
 
-    const docs = await fireSQL.query(`
+    const docs = await fireQuery.query(`
       SELECT *
       FROM GROUP products
       WHERE price < 10

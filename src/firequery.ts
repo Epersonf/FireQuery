@@ -1,15 +1,15 @@
 import firebase from 'firebase/app';
 import 'firebase/firestore';
-import { FireSQLOptions, QueryOptions } from './shared';
+import { FireQueryOptions, QueryOptions } from './shared';
 import { parse } from './sql-parser';
 import { DocumentData, assert } from './utils';
 import { select_ } from './select';
 import { DocumentReference, Firestore } from '@google-cloud/firestore';
 
-export class FireSQL {
+export class FireQuery {
   private _ref: DocumentReference;
 
-  constructor(ref: FirestoreOrDocument, private _options: FireSQLOptions = {}) {
+  constructor(ref: FirestoreOrDocument, private _options: FireQueryOptions = {}) {
     /*
        We initially used `instanceof` to determine the object type, but that
        only allowed using the client SDK. Doing it this way we can support
@@ -44,7 +44,7 @@ export class FireSQL {
     return this._ref.firestore;
   }
 
-  get options(): FireSQLOptions {
+  get options(): FireQueryOptions {
     return this._options;
   }
 

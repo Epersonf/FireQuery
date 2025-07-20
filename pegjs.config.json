@@ -1,5 +1,5 @@
 {
-  "input": "src/sql-parser/firesql.pegjs",
+  "input": "src/sql-parser/firequery.pegjs",
   "output": "src/sql-parser/index.js",
   "format": "commonjs",
   "cache": false

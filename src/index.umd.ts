@@ -1,4 +1,4 @@
-export * from './firesql';
+export * from './firequery';
 import './rx';
 
 // Polyfills

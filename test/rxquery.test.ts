@@ -1,15 +1,15 @@
-import { FireSQL } from '../src/firesql';
+import { FireQuery } from '../src/firequery';
 import { initFirestore } from './helpers/utils';
 import { Observable } from 'rxjs';
 import '../src/rx';
 import { Firestore } from '@google-cloud/firestore';
 
 let firestore: Firestore;
-let fireSQL: FireSQL;
+let fireQuery: FireQuery;
 
 beforeAll(() => {
   firestore = initFirestore();
-  fireSQL = new FireSQL(firestore);
+  fireQuery = new FireQuery(firestore);
 });
 
 afterAll(async () => {
@@ -23,12 +23,12 @@ afterAll(async () => {
 });
 
 describe('Method rxQuery()', () => {
-  it('FireSQL has rxQuery() method', () => {
-    expect(typeof fireSQL.rxQuery).toBe('function');
+  it('FireQuery has rxQuery() method', () => {
+    expect(typeof fireQuery.rxQuery).toBe('function');
   });
 
   it('returns an Observable', () => {
-    const returnValue = fireSQL.rxQuery('SELECT * FROM nonExistantCollection');
+    const returnValue = fireQuery.rxQuery('SELECT * FROM nonExistantCollection');
     expect(returnValue).toBeInstanceOf(Observable);
   });
 
@@ -36,19 +36,19 @@ describe('Method rxQuery()', () => {
     expect.assertions(3);
 
     try {
-      (fireSQL as any).rxQuery();
+      (fireQuery as any).rxQuery();
     } catch (err) {
       expect(err).toBeDefined();
     }
 
     try {
-      (fireSQL as any).rxQuery('');
+      (fireQuery as any).rxQuery('');
     } catch (err) {
       expect(err).toBeDefined();
     }
 
     try {
-      (fireSQL as any).rxQuery(42);
+      (fireQuery as any).rxQuery(42);
     } catch (err) {
       expect(err).toBeDefined();
     }
@@ -58,7 +58,7 @@ describe('Method rxQuery()', () => {
     expect.assertions(1);
 
     try {
-      const returnValue = fireSQL.rxQuery(
+      const returnValue = fireQuery.rxQuery(
         'SELECT * FROM nonExistantCollection',
         {
           includeId: true
@@ -76,7 +76,7 @@ describe('Method rxQuery()', () => {
     expect.assertions(2);
 
     try {
-      fireSQL.rxQuery('not a valid query');
+      fireQuery.rxQuery('not a valid query');
     } catch (err) {
       expect(err).toBeInstanceOf(Error);
       expect(err).toHaveProperty('name', 'SyntaxError');
@@ -86,7 +86,7 @@ describe('Method rxQuery()', () => {
   test('Observable emits when data changes', done => {
     expect.assertions(2);
 
-    const docRef = fireSQL.ref
+    const docRef = fireQuery.ref
       .collection('shops/p0H5osOFWCPlT1QthpXUnnzI/products')
       .doc('rxQueryTest');
     const initialData = {
@@ -97,7 +97,7 @@ describe('Method rxQuery()', () => {
 
     let emits = 0;
 
-    const query$ = new FireSQL(firestore.doc('shops/p0H5osOFWCPlT1QthpXUnnzI'))
+    const query$ = new FireQuery(firestore.doc('shops/p0H5osOFWCPlT1QthpXUnnzI'))
       .rxQuery(`
         SELECT *
         FROM products

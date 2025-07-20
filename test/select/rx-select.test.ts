@@ -1,5 +1,5 @@
 // import admin from 'firebase-admin';
-import { FireSQL } from '../../src/firesql';
+import { FireQuery } from '../../src/firequery';
 import { initFirestore, /*, initAdminFirestore*/ } from '../helpers/utils';
 import { first } from 'rxjs/operators';
 import '../../src/rx';
@@ -7,12 +7,12 @@ import { Firestore } from '@google-cloud/firestore';
 
 // let adminFirestore: admin.firestore.Firestore;
 let firestore: Firestore;
-let fireSQL: FireSQL;
+let fireQuery: FireQuery;
 
 beforeAll(() => {
   // adminFirestore = initAdminFirestore();
   firestore = initFirestore();
-  fireSQL = new FireSQL(firestore);
+  fireQuery = new FireQuery(firestore);
 });
 
 describe('rxQuery() SELECT', () => {
@@ -26,7 +26,7 @@ describe('rxQuery() SELECT', () => {
       }
     };
 
-    const query1$ = fireSQL.rxQuery(`
+    const query1$ = fireQuery.rxQuery(`
         SELECT *
         FROM shops
         WHERE category = 'Toys'
@@ -37,7 +37,7 @@ describe('rxQuery() SELECT', () => {
       checkDone();
     });
 
-    const query2$ = fireSQL.rxQuery(`
+    const query2$ = fireQuery.rxQuery(`
         SELECT *
         FROM shops
         WHERE rating > 3
@@ -48,7 +48,7 @@ describe('rxQuery() SELECT', () => {
       checkDone();
     });
 
-    const query3$ = fireSQL.rxQuery(`
+    const query3$ = fireQuery.rxQuery(`
         SELECT *
         FROM shops
         WHERE category = 'Toys' OR rating > 3
@@ -63,7 +63,7 @@ describe('rxQuery() SELECT', () => {
   // it('returns the correct documents using firebase-admin', done => {
   //   expect.assertions(3);
 
-  //   const docs$ = new FireSQL(
+  //   const docs$ = new FireQuery(
   //     adminFirestore.doc('shops/2DIHCbOMkKz0YcrKUsRf6kgF')
   //   ).rxQuery('SELECT * FROM products');
 

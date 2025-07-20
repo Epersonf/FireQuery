@@ -8,8 +8,8 @@ export function initFirestore(): Firestore {
     return firestore;
   }
 
-  const emulatorProjectId = process.env['FIRESQL_TEST_PROJECT_ID'];
-  const emulatorHost = process.env['FIRESQL_TEST_EMULATOR_HOST'];
+  const emulatorProjectId = process.env['FIREQUERY_TEST_PROJECT_ID'];
+  const emulatorHost = process.env['FIREQUERY_TEST_EMULATOR_HOST'];
 
   if (emulatorProjectId && emulatorHost) {
     // Usando o emulador local
@@ -60,12 +60,12 @@ export function initFirestore(): Firestore {
 function _initFirestore<
   T extends Firestore | admin.firestore.Firestore
 >(namespace: typeof firebase | typeof admin): T {
-  const emulatorProjectId = process.env['FIRESQL_TEST_PROJECT_ID'];
+  const emulatorProjectId = process.env['FIREQUERY_TEST_PROJECT_ID'];
   let firestoreObject: Firestore;
 
   if (typeof emulatorProjectId === 'string') {
     // Using the local emulator
-    const emulatorHost = process.env['FIRESQL_TEST_EMULATOR_HOST'];
+    const emulatorHost = process.env['FIREQUERY_TEST_EMULATOR_HOST'];
     const app = (namespace as typeof firebase).initializeApp({
       projectId: emulatorProjectId
     });

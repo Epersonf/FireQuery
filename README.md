@@ -1,27 +1,27 @@
-# FireSQL - Query Firestore using SQL syntax
+# FireQuery - Query Firestore using SQL syntax
 
-## What is FireSQL?
+## What is FireQuery?
 
-FireSQL is a library built on top of the official Firebase SDK that allows you to query Cloud Firestore using SQL syntax. It's smart enough to issue the minimum amount of queries necessary to the Firestore servers in order to get the data that you request.
+FireQuery is a library built on top of the official Firebase SDK that allows you to query Cloud Firestore using SQL syntax. It's smart enough to issue the minimum amount of queries necessary to the Firestore servers in order to get the data that you request.
 
 On top of that, it offers some of the handy utilities that you're used to when using SQL, so that it can provide a better querying experience beyond what's offered by the native querying methods.
 
 ## Installation
 
-Just add `firesql` and `firebase` to your project:
+Just add `firequery` and `firebase` to your project:
 
 ```sh
-npm install firesql firebase
+npm install firequery firebase
 # or
-yarn add firesql firebase
+yarn add firequery firebase
 ```
 
 If you want to receive realtime updates when querying, then you will also need to install `rxjs` and `rxfire`:
 
 ```sh
-npm install firesql firebase rxjs rxfire
+npm install firequery firebase rxjs rxfire
 # or
-yarn add firesql firebase rxjs rxfire
+yarn add firequery firebase rxjs rxfire
 ```
 
 ## Usage
@@ -33,19 +33,19 @@ const dbRef = firebase.firestore();
 // ... or the subcollections of some document
 const docRef = firebase.firestore().doc('someDoc');
 
-// And then just pass that reference to FireSQL
-const fireSQL = new FireSQL(dbRef);
+// And then just pass that reference to FireQuery
+const fireQuery = new FireQuery(dbRef);
 
 // Use `.query()` to get a one-time result
-fireSQL.query('SELECT * FROM myCollection').then(documents => {
+fireQuery.query('SELECT * FROM myCollection').then(documents => {
   documents.forEach(doc => {
     /* Do something with the document */
   });
 });
 
 // Use `.rxQuery()` to get an observable for realtime results.
-// Don't forget to import "firesql/rx" first (see example below).
-fireSQL.rxQuery('SELECT * FROM myCollection').subscribe(documents => {
+// Don't forget to import "firequery/rx" first (see example below).
+fireQuery.rxQuery('SELECT * FROM myCollection').subscribe(documents => {
   /* Got an update with the documents! */
 });
 
@@ -56,15 +56,15 @@ fireSQL.rxQuery('SELECT * FROM myCollection').subscribe(documents => {
 ### One-time result (Promise)
 
 ```js
-import { FireSQL } from 'firesql';
+import { FireQuery } from 'firequery';
 import firebase from 'firebase/app';
 import 'firebase/firestore';
 
 firebase.initializeApp({ /* ... */ });
 
-const fireSQL = new FireSQL(firebase.firestore());
+const fireQuery = new FireQuery(firebase.firestore());
 
-const citiesPromise = fireSQL.query(`
+const citiesPromise = fireQuery.query(`
   SELECT name AS city, country, population AS people
   FROM cities
   WHERE country = 'USA' AND population > 700000
@@ -84,16 +84,16 @@ citiesPromise.then(cities => {
 ### Realtime updates (Observable)
 
 ```js
-import { FireSQL } from 'firesql';
+import { FireQuery } from 'firequery';
 import firebase from 'firebase/app';
-import 'firesql/rx'; // <-- Important! Don't forget
+import 'firequery/rx'; // <-- Important! Don't forget
 import 'firebase/firestore';
 
 firebase.initializeApp({ /* ... */ });
 
-const fireSQL = new FireSQL(firebase.firestore());
+const fireQuery = new FireQuery(firebase.firestore());
 
-const cities$ = fireSQL.rxQuery(`
+const cities$ = fireQuery.rxQuery(`
   SELECT city, category, AVG(price) AS avgPrice
   FROM restaurants
   WHERE category IN ("Mexican", "Indian", "Brunch")
@@ -145,16 +145,16 @@ SELECT __name__ AS docId, country, population
 FROM cities
 ```
 
-If you always want to include the document ID, you can specify that as a global option to the FireSQL class:
+If you always want to include the document ID, you can specify that as a global option to the FireQuery class:
 ```js
-const fireSQL = new FireSQL(ref, { includeId: true}); // To include it as "__name__"
-const fireSQL = new FireSQL(ref, { includeId: 'fieldName'}); // To include it as "fieldName"
+const fireQuery = new FireQuery(ref, { includeId: true}); // To include it as "__name__"
+const fireQuery = new FireQuery(ref, { includeId: 'fieldName'}); // To include it as "fieldName"
 ```
 
 You can also specify that option when querying. This will always take preference over the global option:
 ```js
-fireSQL.query(sql, { includeId: 'id'}); // To include it as "id"
-fireSQL.query(sql, { includeId: false}); // To not include it
+fireQuery.query(sql, { includeId: 'id'}); // To include it as "id"
+fireQuery.query(sql, { includeId: false}); // To not include it
 ```
 
 When querying it's also possible to use the document as a search field by using `__name__` directly. For example, you could search for all the documents whose IDs start with `Hello`:
@@ -167,7 +167,7 @@ WHERE __name__ LIKE 'Hello%'
 > **Note**: You will need to specify the `includeId` option if you want to obtain the document IDs when doing a `SELECT *` query.
 
 ## Collection group queries
-You can easily do collection group queries with FireSQL!
+You can easily do collection group queries with FireQuery!
 
 This query will get all documents from any collection or subcollection named "landmarks":
 ```sql
@@ -187,9 +187,9 @@ WHERE tags CONTAINS 'interesting'
 
 You can [read more about array membership queries](https://firebase.google.com/docs/firestore/query-data/queries#array_membership) in the official Firestore documentation.
 
-## How does FireSQL work?
+## How does FireQuery work?
 
-FireSQL transforms your SQL query into one or more queries to Firestore. Once all the necessary data has been retrieved, it does some internal processing in order to give you exactly what you asked for.
+FireQuery transforms your SQL query into one or more queries to Firestore. Once all the necessary data has been retrieved, it does some internal processing in order to give you exactly what you asked for.
 
 For example, take the following SQL:
 ```sql
@@ -209,7 +209,7 @@ SELECT *
 FROM cities
 WHERE country = 'USA' OR population > 50000
 ```
-There's no direct way to perform an `OR` query on Firestore so FireSQL splits that into 2 separate queries:
+There's no direct way to perform an `OR` query on Firestore so FireQuery splits that into 2 separate queries:
 ```js
 db.collection('cities').where('country', '==', 'USA');
 db.collection('cities').where('population', '>', 50000);
@@ -241,7 +241,7 @@ cities.where('country', '>', 'Japan').where('region', '==', 'east').where('popul
 cities.where('country', '>', 'Japan').where('region', '==', 'west').where('capital', '==', true);
 cities.where('country', '>', 'Japan').where('region', '==', 'west').where('population', '>', 100000);
 ```
-As you can see, SQL offers a very concise and powerful way to express your query. But as they say, ***with great power comes great responsibility***. Always be mindful of the underlying data model when using FireSQL.
+As you can see, SQL offers a very concise and powerful way to express your query. But as they say, ***with great power comes great responsibility***. Always be mindful of the underlying data model when using FireQuery.
 
 ## Examples of supported queries:
 

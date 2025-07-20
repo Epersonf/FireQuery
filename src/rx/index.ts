@@ -1,20 +1,20 @@
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { parse, SQL_Select } from '../sql-parser';
-import { FireSQL } from '../firesql';
+import { FireQuery } from '../firequery';
 import { SelectOperation } from '../select';
 import { assert, DocumentData, contains, DOCUMENT_KEY_NAME, collectionData } from '../utils';
 import { QueryOptions } from '../shared';
 import { DocumentReference, Query } from '@google-cloud/firestore';
 
-declare module '../firesql' {
-  interface FireSQL {
+declare module '../firequery' {
+  interface FireQuery {
     rxQuery(sql: string, options?: QueryOptions): Observable<DocumentData[]>;
     rxQuery<T>(sql: string, options?: QueryOptions): Observable<T[]>;
   }
 }
 
-FireSQL.prototype.rxQuery = function<T>(
+FireQuery.prototype.rxQuery = function<T>(
   sql: string,
   options?: QueryOptions
 ): Observable<T[] | DocumentData[]> {
