@@ -1,10 +1,11 @@
 import { assert, astValueToNative } from '../utils';
 import { SQL_Value } from '../sql-parser';
+import { DocumentData, Query } from '@google-cloud/firestore';
 
 export function applyLimit(
-  queries: firebase.firestore.Query[],
+  queries: Query[],
   astLimit: SQL_Value
-): firebase.firestore.Query[] {
+): Query[] {
   assert(
     astLimit.type === 'number',
     "LIMIT has to be a number."
@@ -14,9 +15,9 @@ export function applyLimit(
 }
 
 export function applyLimitLocally(
-  docs: firebase.firestore.DocumentData[],
+  docs: DocumentData[],
   astLimit: SQL_Value
-): firebase.firestore.DocumentData[] {
+): DocumentData[] {
   const limit = astValueToNative(astLimit) as number;
   docs.splice(limit);
   return docs;

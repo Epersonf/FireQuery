@@ -1,9 +1,10 @@
-import { assert } from '../utils';
+import { Query } from '@google-cloud/firestore';
+import { assert, DocumentData } from '../utils';
 
 export function applyOrderBy(
-  queries: firebase.firestore.Query[],
+  queries: Query[],
   astOrderBy: any[]
-): firebase.firestore.Query[] {
+): Query[] {
   astOrderBy.forEach(orderBy => {
     assert(
       orderBy.expr.type === 'column_ref',
@@ -19,9 +20,9 @@ export function applyOrderBy(
 }
 
 export function applyOrderByLocally(
-  docs: firebase.firestore.DocumentData[],
+  docs: DocumentData[],
   astOrderBy: any[]
-): firebase.firestore.DocumentData[] {
+): DocumentData[] {
   return docs.sort((doc1, doc2) => {
     return astOrderBy.reduce<number>((result, orderBy) => {
       if (result !== 0) {

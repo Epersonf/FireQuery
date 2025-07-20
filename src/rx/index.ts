@@ -1,11 +1,11 @@
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { collectionData } from 'rxfire/firestore';
 import { parse, SQL_Select } from '../sql-parser';
 import { FireSQL } from '../firesql';
 import { SelectOperation } from '../select';
-import { assert, DocumentData, contains, DOCUMENT_KEY_NAME } from '../utils';
+import { assert, DocumentData, contains, DOCUMENT_KEY_NAME, collectionData } from '../utils';
 import { QueryOptions } from '../shared';
+import { DocumentReference, Query } from '@google-cloud/firestore';
 
 declare module '../firesql' {
   interface FireSQL {
@@ -32,10 +32,10 @@ FireSQL.prototype.rxQuery = function<T>(
 };
 
 function rxSelect(
-  ref: firebase.firestore.DocumentReference,
+  ref: DocumentReference,
   ast: SQL_Select,
   options: QueryOptions
-): Observable<firebase.firestore.DocumentData[]> {
+): Observable<DocumentData[]> {
   const selectOp = new SelectOperation(ref, ast, options);
   let queries = selectOp.generateQueries_();
 
@@ -68,15 +68,15 @@ function rxSelect(
 
   const rxData = combineLatest(
     queries.map(query =>
-      collectionData<firebase.firestore.DocumentData>(query, idField)
+      collectionData<DocumentData>(query, idField)
     )
   );
 
   return rxData.pipe(
-    map((results: firebase.firestore.DocumentData[][]) => {
+    map((results: DocumentData[][]) => {
       // We have an array of results (one for each query we generated) where
       // each element is an array of documents. We need to flatten them.
-      const documents: firebase.firestore.DocumentData[] = [];
+      const documents: DocumentData[] = [];
       const seenDocuments: { [id: string]: true } = {};
 
       for (const docs of results) {
@@ -96,7 +96,7 @@ function rxSelect(
 
       return documents;
     }),
-    map((documents: firebase.firestore.DocumentData[]) => {
+    map((documents: DocumentData[]) => {
       return selectOp.processDocuments_(queries, documents);
     })
   );

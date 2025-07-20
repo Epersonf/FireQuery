@@ -1,10 +1,11 @@
+import { Query, WhereFilterOp } from '@google-cloud/firestore';
 import { SQL_Value, SQL_ValueString, SQL_ValueBool } from '../sql-parser';
 import { assert, prefixSuccessor, astValueToNative } from '../utils';
 
 export function applyWhere(
-  queries: firebase.firestore.Query[],
+  queries: Query[],
   astWhere: { [k: string]: any }
-): firebase.firestore.Query[] {
+): Query[] {
   if (astWhere.type === 'binary_expr') {
     if (astWhere.operator === 'AND') {
       queries = applyWhere(queries, astWhere.left);
@@ -24,7 +25,7 @@ export function applyWhere(
         'Unsupported WHERE type on right side.'
       );
 
-      const newQueries: firebase.firestore.Query[] = [];
+      const newQueries: Query[] = [];
       astWhere.right.value.forEach((valueObj: SQL_Value) => {
         newQueries.push(
           ...applyCondition(queries, astWhere.left.column, '=', valueObj)
@@ -135,11 +136,11 @@ export function applyWhere(
 }
 
 function applyCondition(
-  queries: firebase.firestore.Query[],
+  queries: Query[],
   field: string,
   astOperator: string,
   astValue: SQL_Value
-): firebase.firestore.Query[] {
+): Query[] {
   /*
    TODO: Several things:
 
@@ -185,8 +186,8 @@ function applyCondition(
   }
 }
 
-function whereFilterOp(op: string): firebase.firestore.WhereFilterOp {
-  let newOp: firebase.firestore.WhereFilterOp;
+function whereFilterOp(op: string): WhereFilterOp {
+  let newOp: WhereFilterOp;
 
   switch (op) {
     case '=':

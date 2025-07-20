@@ -1,39 +1,32 @@
-import firebase from 'firebase/app';
+import { Firestore } from '@google-cloud/firestore';
 import 'firebase/firestore';
 
-let firestore: firebase.firestore.Firestore;
+let firestore: Firestore;
 
-export function initFirestore(): firebase.firestore.Firestore {
+export function initFirestore(): Firestore {
   if (firestore) {
     return firestore;
   }
 
   const emulatorProjectId = process.env['FIRESQL_TEST_PROJECT_ID'];
+  const emulatorHost = process.env['FIRESQL_TEST_EMULATOR_HOST'];
 
-  if (typeof emulatorProjectId === 'string') {
-    // Using the local emulator
-    const emulatorHost = process.env['FIRESQL_TEST_EMULATOR_HOST'];
-    const app = firebase.initializeApp({
-      projectId: emulatorProjectId
-    });
-
-    firestore = app.firestore();
-    firestore.settings({
-      host: emulatorHost,
-      ssl: false
+  if (emulatorProjectId && emulatorHost) {
+    // Usando o emulador local
+    firestore = new Firestore({
+      projectId: emulatorProjectId,
+      servicePath: emulatorHost.split(':')[0],
+      port: parseInt(emulatorHost.split(':')[1], 10),
+      sslCreds: require('@grpc/grpc-js').credentials.createInsecure(),
     });
   } else {
-    try {
-      firestore = firebase.app().firestore();
-    } catch (err) {
-      const { project } = require('../../config/test.config.json');
-      const app = firebase.initializeApp(project);
-      firestore = app.firestore();
-    }
+    // SDK padrão (GOOGLE_APPLICATION_CREDENTIALS ou ambiente GCP)
+    firestore = new Firestore();
   }
 
   return firestore;
 }
+
 
 
 /*
@@ -41,10 +34,10 @@ import admin from 'firebase-admin';
 import firebase from 'firebase/app';
 import 'firebase/firestore';
 
-let firestore: firebase.firestore.Firestore;
+let firestore: Firestore;
 // let adminFirestore: admin.firestore.Firestore;
 
-export function initFirestore(): firebase.firestore.Firestore {
+export function initFirestore(): Firestore {
   if (firestore) {
     return firestore;
   }
@@ -65,10 +58,10 @@ export function initFirestore(): firebase.firestore.Firestore {
 // }
 
 function _initFirestore<
-  T extends firebase.firestore.Firestore | admin.firestore.Firestore
+  T extends Firestore | admin.firestore.Firestore
 >(namespace: typeof firebase | typeof admin): T {
   const emulatorProjectId = process.env['FIRESQL_TEST_PROJECT_ID'];
-  let firestoreObject: firebase.firestore.Firestore;
+  let firestoreObject: Firestore;
 
   if (typeof emulatorProjectId === 'string') {
     // Using the local emulator

@@ -1,4 +1,6 @@
+import { Query } from '@google-cloud/firestore';
 import { SQL_Value, SQL_AggrFunction } from './sql-parser';
+import { Observable } from 'rxjs';
 
 export type DocumentData = { [field: string]: any };
 
@@ -93,4 +95,22 @@ export function nameOrAlias(
   }
 
   return `${aggrFn.name}(${name})`;
+}
+
+export function collectionData<T = DocumentData>(
+  query: Query<T>,
+  idField?: string
+): Observable<T[]> {
+  return new Observable<T[]>(subscriber => {
+    const unsubscribe = query.onSnapshot(snapshot => {
+      const data = snapshot.docs.map(doc => {
+        const d = doc.data();
+        return idField ? { ...d, [idField]: doc.id } : d;
+      }) as T[];
+
+      subscriber.next(data);
+    }, error => subscriber.error(error));
+
+    return unsubscribe;
+  });
 }

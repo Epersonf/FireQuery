@@ -4,9 +4,10 @@ import { FireSQLOptions, QueryOptions } from './shared';
 import { parse } from './sql-parser';
 import { DocumentData, assert } from './utils';
 import { select_ } from './select';
+import { DocumentReference, Firestore } from '@google-cloud/firestore';
 
 export class FireSQL {
-  private _ref: firebase.firestore.DocumentReference;
+  private _ref: DocumentReference;
 
   constructor(ref: FirestoreOrDocument, private _options: FireSQLOptions = {}) {
     /*
@@ -15,18 +16,18 @@ export class FireSQL {
        both the client and the admin SDKs.
        */
     if (typeof (ref as any).doc === 'function') {
-      // It's an instance of firebase.firestore.Firestore
+      // It's an instance of Firestore
       try {
-        this._ref = (ref as firebase.firestore.Firestore).doc('/');
+        this._ref = (ref as Firestore).doc('/');
       } catch (err) {
         // If the Firestore instance we get is from the Admin SDK, it throws
         // an error if we call `.doc("/")` on it. In that case we just treat
-        // it as a firebase.firestore.DocumentReference
-        this._ref = ref as firebase.firestore.DocumentReference;
+        // it as a DocumentReference
+        this._ref = ref as DocumentReference;
       }
     } else if (typeof (ref as any).collection === 'function') {
-      // It's an instance of firebase.firestore.DocumentReference
-      this._ref = ref as firebase.firestore.DocumentReference;
+      // It's an instance of DocumentReference
+      this._ref = ref as DocumentReference;
     } else {
       throw new Error(
         'The first parameter needs to be a Firestore object ' +
@@ -35,11 +36,11 @@ export class FireSQL {
     }
   }
 
-  get ref(): firebase.firestore.DocumentReference {
+  get ref(): DocumentReference {
     return this._ref;
   }
 
-  get firestore(): firebase.firestore.Firestore {
+  get firestore(): Firestore {
     return this._ref.firestore;
   }
 
@@ -78,8 +79,8 @@ export class FireSQL {
 }
 
 export type FirestoreOrDocument =
-  | firebase.firestore.Firestore
-  | firebase.firestore.DocumentReference
+  | Firestore
+  | DocumentReference
   | AdminFirestore
   | AdminDocumentReference;
 

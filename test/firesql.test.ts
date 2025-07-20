@@ -1,9 +1,9 @@
 // import admin from 'firebase-admin';
-import firebase from 'firebase/app';
 import { FireSQL } from '../src/firesql';
 import { initFirestore/*, initAdminFirestore*/ } from './helpers/utils';
+import { Firestore } from '@google-cloud/firestore';
 
-let firestore: firebase.firestore.Firestore;
+let firestore: Firestore;
 // let adminFirestore: admin.firestore.Firestore;
 
 beforeAll(() => {

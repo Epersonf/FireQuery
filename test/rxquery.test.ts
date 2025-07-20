@@ -2,8 +2,9 @@ import { FireSQL } from '../src/firesql';
 import { initFirestore } from './helpers/utils';
 import { Observable } from 'rxjs';
 import '../src/rx';
+import { Firestore } from '@google-cloud/firestore';
 
-let firestore: firebase.firestore.Firestore;
+let firestore: Firestore;
 let fireSQL: FireSQL;
 
 beforeAll(() => {
@@ -13,12 +14,12 @@ beforeAll(() => {
 
 afterAll(async () => {
   // Cleanup
-  await fireSQL.ref
-    .collection('shops/p0H5osOFWCPlT1QthpXUnnzI/products')
-    .doc('rxQueryTest')
+  await firestore
+    .doc('shops/p0H5osOFWCPlT1QthpXUnnzI/products/rxQueryTest')
     .delete()
-    .catch(() => void 0); // We don't want any failure here to affect the tests
-  await firestore.app.delete();
+    .catch(() => void 0);
+
+  await firestore.terminate();
 });
 
 describe('Method rxQuery()', () => {

@@ -1,8 +1,9 @@
 import { FireSQL } from '../../src/firesql';
 import { initFirestore } from '../helpers/utils';
 import { DOCUMENT_KEY_NAME } from '../../src/utils';
+import { Firestore } from '@google-cloud/firestore';
 
-let firestore: firebase.firestore.Firestore;
+let firestore: Firestore;
 let fireSQL: FireSQL;
 
 beforeAll(() => {

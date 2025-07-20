@@ -23,11 +23,12 @@ import {
 import { applyOrderBy, applyOrderByLocally } from './orderby';
 import { applyLimit, applyLimitLocally } from './limit';
 import { applyWhere } from './where';
+import { DocumentReference, Firestore, Query } from '@google-cloud/firestore';
 
 const VALID_AGGR_FUNCTIONS = ['MIN', 'MAX', 'SUM', 'AVG'];
 
 export async function select_(
-  ref: firebase.firestore.DocumentReference,
+  ref: DocumentReference,
   ast: SQL_Select,
   options: QueryOptions
 ): Promise<DocumentData[]> {
@@ -41,7 +42,7 @@ export class SelectOperation {
   _includeId?: boolean | string;
 
   constructor(
-    private _ref: firebase.firestore.DocumentReference,
+    private _ref: DocumentReference,
     private _ast: SQL_Select,
     options: QueryOptions
   ) {
@@ -66,7 +67,7 @@ export class SelectOperation {
     }
   }
 
-  generateQueries_(ast?: SQL_Select): firebase.firestore.Query[] {
+  generateQueries_(ast?: SQL_Select): Query[] {
     ast = ast || this._ast;
 
     assert(
@@ -75,7 +76,7 @@ export class SelectOperation {
     );
 
     const path = ast.from.parts.join('/');
-    let queries: firebase.firestore.Query[] = [];
+    let queries: Query[] = [];
 
     if (ast.from.group) {
       assert(
@@ -85,7 +86,7 @@ export class SelectOperation {
 
       const firestore = contains(this._ref, 'firestore')
         ? this._ref.firestore
-        : ((this._ref as any) as firebase.firestore.Firestore);
+        : ((this._ref as any) as Firestore);
 
       assert(
         typeof (firestore as any).collectionGroup === 'function',
@@ -158,7 +159,7 @@ export class SelectOperation {
   }
 
   async executeQueries_(
-    queries: firebase.firestore.Query[]
+    queries: Query[]
   ): Promise<DocumentData[]> {
     let documents: DocumentData[] = [];
     const seenDocuments: { [id: string]: true } = {};
@@ -199,7 +200,7 @@ export class SelectOperation {
   }
 
   processDocuments_(
-    queries: firebase.firestore.Query[],
+    queries: Query[],
     documents: DocumentData[]
   ): DocumentData[] {
     if (documents.length === 0) {
@@ -215,7 +216,7 @@ export class SelectOperation {
   }
 
   private _processUngroupedDocs(
-    queries: firebase.firestore.Query[],
+    queries: Query[],
     documents: DocumentData[]
   ): DocumentData[] {
     if (this._ast.orderby && queries.length > 1) {
@@ -262,7 +263,7 @@ export class SelectOperation {
   }
 
   private _processGroupedDocs(
-    queries: firebase.firestore.Query[],
+    queries: Query[],
     groupedDocs: GroupedDocuments
   ): DocumentData[] {
     assert(this._ast.columns !== '*', 'Cannot "SELECT *" when using GROUP BY.');
