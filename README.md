@@ -58,7 +58,7 @@ fireQuery.rxQuery('SELECT * FROM myCollection').subscribe(documents => {
 ```js
 import { FireQuery } from 'firequery';
 import firebase from 'firebase/app';
-import 'firebase/firestore';
+import '@google-cloud/firestore';
 
 firebase.initializeApp({ /* ... */ });
 
@@ -87,7 +87,7 @@ citiesPromise.then(cities => {
 import { FireQuery } from 'firequery';
 import firebase from 'firebase/app';
 import 'firequery/rx'; // <-- Important! Don't forget
-import 'firebase/firestore';
+import '@google-cloud/firestore';
 
 firebase.initializeApp({ /* ... */ });
 

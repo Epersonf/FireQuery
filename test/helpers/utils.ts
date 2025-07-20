@@ -1,5 +1,5 @@
 import { Firestore } from '@google-cloud/firestore';
-import 'firebase/firestore';
+import '@google-cloud/firestore';
 
 let firestore: Firestore;
 
@@ -32,7 +32,7 @@ export function initFirestore(): Firestore {
 /*
 import admin from 'firebase-admin';
 import firebase from 'firebase/app';
-import 'firebase/firestore';
+import '@google-cloud/firestore';
 
 let firestore: Firestore;
 // let adminFirestore: admin.firestore.Firestore;
