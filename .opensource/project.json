@@ -1,10 +1,10 @@
 {
   "name": "FireQuery",
-  "platforms": ["Node", "Web"],
+  "platforms": ["Node"],
   "content": "README.md",
-  "related": ["firebase/firebase-js-sdk"],
+  "related": ["googleapis/nodejs-firestore"],
   "pages": {
-    "test/README.md": "Tests"
+    "test/README.md": "Test Instructions"
   },
   "tabs": []
 }

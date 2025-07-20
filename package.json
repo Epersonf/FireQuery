@@ -72,7 +72,7 @@
     "core-js": "^3.44.0"
   },
   "peerDependencies": {
-    "firebase": "*",
+    "@google-cloud/firestore": "*",
     "rxjs": "*"
   }
 }
