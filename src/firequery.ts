@@ -1,4 +1,4 @@
-import '@google-cloud/firestoree';
+import '@google-cloud/firestore';
 import { FireQueryOptions, QueryOptions } from './shared';
 import { parse } from './sql-parser';
 import { DocumentData, assert } from './utils';
