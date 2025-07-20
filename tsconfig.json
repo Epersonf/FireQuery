@@ -7,6 +7,7 @@
     "lib": ["es2015", "es2016", "es2017", "dom"],
     "strict": true,
     "sourceMap": true,
+    "allowJs": true,
     "declaration": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
@@ -15,5 +16,5 @@
     "emitDecoratorMetadata": true,
     "outDir": "out"
   },
-  "include": ["src"]
+  "include": ["src/**/*"]
 }

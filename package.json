@@ -12,7 +12,7 @@
     "firequery"
   ],
   "main": "out/firequery.js",
-  "typings": "out/types/index.d.ts",
+  "typings": "out/index.d.ts",
   "author": "Eperson Mayrink <epersoncmxf@gmail.com>",
   "maintainers": [
     "Eperson Mayrink <epersoncmxf@gmail.com>"
@@ -29,19 +29,8 @@
     "node": ">=20.0.0"
   },
   "scripts": {
-    "lint": "tslint --project tsconfig.json -t codeFrame 'src/**/*.ts' 'test/**/*.ts'",
-    "prebuild": "npm run pegjs && rimraf out",
-    "build": "tsc --module commonjs && rollup -c rollup.config.mjs",
-    "start": "rollup -c rollup.config.js -w",
-    "test": "ts-node --project tools/tsconfig.json tools/run-tests.ts",
-    "test:emulator": "ts-node --project tools/tsconfig.json tools/tests/emulator/index.ts",
-    "test:watch": "jest --verbose --watch",
-    "test:prod": "npm run lint && npm run test --coverage --no-cache",
-    "test:setup": "ts-node --project tools/tsconfig.json tools/tests/test-setup.ts",
-    "ts-node": "ts-node",
-    "release:prepare": "npm run build && ts-node tools/prepare-release.ts",
-    "npm:publish": "cd release && npm publish",
-    "pegjs": "pegjs --extra-options-file pegjs.config.json"
+    "pegjs": "pegjs --extra-options-file pegjs.config.json",
+    "build": "npm run pegjs && tsc --module commonjs && rollup -c rollup.config.mjs"
   },
   "prettier": {
     "semi": true,
