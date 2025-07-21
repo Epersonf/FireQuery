@@ -1,343 +1,173 @@
-# FireQuery - Query Firestore using SQL syntax
+# FireQuery - Query Firestore using SQL
 
-## What is FireQuery?
+## Overview
 
-FireQuery is a library built on top of the official Firebase SDK that allows you to query Cloud Firestore using SQL syntax. It's smart enough to issue the minimum amount of queries necessary to the Firestore servers in order to get the data that you request.
+**FireQuery** is a library that enables you to run SQL commands (PostgreSQL-style) on Cloud Firestore using familiar syntax such as `SELECT`, `INSERT`, `UPDATE`, and `DELETE`. It offers partial support for `JOIN`, `WHERE`, `ORDER BY`, `LIMIT`, `OFFSET`, and more.
 
-On top of that, it offers some of the handy utilities that you're used to when using SQL, so that it can provide a better querying experience beyond what's offered by the native querying methods.
+Queries are parsed via PEG.js with auto-generated type definitions, and execution is handled using the official Firebase SDK.
+
+---
 
 ## Installation
 
-Just add `firequery` and `firebase` to your project:
-
 ```sh
 npm install firequery firebase
-# or
-yarn add firequery firebase
 ```
 
-If you want to receive realtime updates when querying, then you will also need to install `rxjs` and `rxfire`:
+---
 
-```sh
-npm install firequery firebase rxjs rxfire
-# or
-yarn add firequery firebase rxjs rxfire
-```
+## Basic Usage
 
-## Usage
+```ts
+import { FireQuery } from 'firequery';
+import firebase from 'firebase/app';
+import '@google-cloud/firestore';
 
-```js
-// You can either query the collections at the root of the database...
+firebase.initializeApp({ /* config */ });
 const dbRef = firebase.firestore();
 
-// ... or the subcollections of some document
-const docRef = firebase.firestore().doc('someDoc');
-
-// And then just pass that reference to FireQuery
 const fireQuery = new FireQuery(dbRef);
 
-// Use `.query()` to get a one-time result
-fireQuery.query('SELECT * FROM myCollection').then(documents => {
-  documents.forEach(doc => {
-    /* Do something with the document */
-  });
-});
+const users = await fireQuery.query(`
+  SELECT name, age FROM users WHERE active = true ORDER BY age DESC LIMIT 5;
+`);
 
-// Use `.rxQuery()` to get an observable for realtime results.
-// Don't forget to import "firequery/rx" first (see example below).
-fireQuery.rxQuery('SELECT * FROM myCollection').subscribe(documents => {
-  /* Got an update with the documents! */
-});
-
+console.log(users);
 ```
+
+For realtime updates:
+
+```ts
+import 'firequery/rx';
+
+fireQuery.rxQuery('SELECT * FROM posts WHERE published = true').subscribe(results => {
+  console.log('Realtime update:', results);
+});
+```
+
+---
+
+## Supported Commands
+
+### `SELECT`
+
+```sql
+SELECT id, name FROM users WHERE age >= 18 ORDER BY created_at DESC LIMIT 10 OFFSET 5;
+```
+
+### `INSERT`
+
+```sql
+INSERT INTO users (id, name, active)
+VALUES ('u1', 'Alice', true), ('u2', 'Bob', false);
+```
+
+### `UPDATE`
+
+```sql
+UPDATE users
+SET active = false, last_login = CURRENT_TIMESTAMP
+WHERE last_login < '2024-01-01';
+```
+
+### `DELETE`
+
+```sql
+DELETE FROM users
+WHERE active = false AND created_at < '2023-01-01';
+```
+
+---
+
+## Features and Extensions
+
+### WHERE
+
+* Supports `=`, `!=`, `>`, `<`, `<=`, `>=`
+* `IS NULL`, `IS NOT NULL`
+* `IN (...)`
+* `LIKE 'prefix%'`
+* `AND`, `OR`, nested expressions
+
+### Functions
+
+* `NOW()` or `CURRENT_TIMESTAMP` return `new Date()`
+
+### Sorting, Limit and Offset
+
+```sql
+ORDER BY score DESC, created_at ASC
+LIMIT 10 OFFSET 20
+```
+
+### Document ID
+
+* Use `__name__` to access the document ID:
+
+```sql
+SELECT __name__ AS id, name FROM users;
+```
+
+---
+
+## Current Support
+
+| Feature               | Status      |
+| --------------------- | ----------- |
+| SELECT                | ✅           |
+| INSERT                | ✅           |
+| UPDATE                | ✅           |
+| DELETE                | ✅           |
+| Complex WHERE         | ✅           |
+| ORDER BY              | ✅           |
+| LIMIT/OFFSET          | ✅           |
+| Functions: NOW(), etc | ✅           |
+| IN, LIKE              | ✅           |
+| GROUP BY              | ❌           |
+| JOIN                  | ❌           |
+| Subqueries            | ✅ (limited) |
+| RETURNING             | ❌           |
+
+---
 
 ## Examples
 
-### One-time result (Promise)
-
-```js
-import { FireQuery } from 'firequery';
-import firebase from 'firebase/app';
-import '@google-cloud/firestore';
-
-firebase.initializeApp({ /* ... */ });
-
-const fireQuery = new FireQuery(firebase.firestore());
-
-const citiesPromise = fireQuery.query(`
-  SELECT name AS city, country, population AS people
-  FROM cities
-  WHERE country = 'USA' AND population > 700000
-  ORDER BY country, population DESC
-  LIMIT 10
-`);
-
-citiesPromise.then(cities => {
-  for (const city of cities) {
-    console.log(
-      `${city.city} in ${city.country} has ${city.people} people`
-    );
-  }
-});
-```
-
-### Realtime updates (Observable)
-
-```js
-import { FireQuery } from 'firequery';
-import firebase from 'firebase/app';
-import 'firequery/rx'; // <-- Important! Don't forget
-import '@google-cloud/firestore';
-
-firebase.initializeApp({ /* ... */ });
-
-const fireQuery = new FireQuery(firebase.firestore());
-
-const cities$ = fireQuery.rxQuery(`
-  SELECT city, category, AVG(price) AS avgPrice
-  FROM restaurants
-  WHERE category IN ("Mexican", "Indian", "Brunch")
-  GROUP BY city, category
-`);
-
-cities$.subscribe(results => {
-  /* REALTIME AGGREGATED DATA! */
-});
-```
-
-## Limitations
-
-- Only `SELECT` queries for now. Support for `INSERT`, `UPDATE`, and `DELETE` might come in the future.
-- No support for `JOIN`s.
-- `LIMIT` doesn't accept an `OFFSET`, only a single number.
-- No support for aggregate function `COUNT`.
-- If using `GROUP BY`, it cannot be combined with `ORDER BY` nor `LIMIT`.
-- No support for negating conditions with `NOT`.
-- Limited `LIKE`. Allows for searches in the form of `WHERE field LIKE 'value%'`, to look for fields that begin with the given value; and `WHERE field LIKE 'value'`, which is functionally equivalent to `WHERE field = 'value'`.
-
-## Nested objects
-You can access nested objects by using backticks around the field path. For example, if you have a collection "*products*" with documents like this:
-```js
-{
-  productName: "Firebase Hot Sauce",
-  details: {
-    available: true,
-    stock: 42
-  }
-}
-```
-You could do the following queries:
 ```sql
-SELECT *
-FROM products
-WHERE `details.stock` > 10
-```
-```sql
-SELECT productName, `details.stock` AS productStock
-FROM products
-WHERE `details.available` = true
-```
+-- Query documents with boolean field
+SELECT * FROM users WHERE active;
 
-## Getting the document IDs
-You can use the special field `__name__` to refer to the document ID (its key inside a collection). For convenience, you might want to alias it:
-```sql
-SELECT __name__ AS docId, country, population
-FROM cities
+-- Insert documents
+INSERT INTO products (id, title, price)
+VALUES ('p1', 'Item 1', 99.9);
+
+-- Update records
+UPDATE users SET last_seen = NOW() WHERE active = true;
+
+-- Conditional deletion
+DELETE FROM logs WHERE created_at < '2022-01-01';
 ```
 
-If you always want to include the document ID, you can specify that as a global option to the FireQuery class:
-```js
-const fireQuery = new FireQuery(ref, { includeId: true}); // To include it as "__name__"
-const fireQuery = new FireQuery(ref, { includeId: 'fieldName'}); // To include it as "fieldName"
-```
+---
 
-You can also specify that option when querying. This will always take preference over the global option:
-```js
-fireQuery.query(sql, { includeId: 'id'}); // To include it as "id"
-fireQuery.query(sql, { includeId: false}); // To not include it
-```
+## Performance Notice
 
-When querying it's also possible to use the document as a search field by using `__name__` directly. For example, you could search for all the documents whose IDs start with `Hello`:
-```sql
-SELECT *
-FROM cities
-WHERE __name__ LIKE 'Hello%'
-```
-
-> **Note**: You will need to specify the `includeId` option if you want to obtain the document IDs when doing a `SELECT *` query.
-
-## Collection group queries
-You can easily do collection group queries with FireQuery!
-
-This query will get all documents from any collection or subcollection named "landmarks":
-```sql
-SELECT *
-FROM GROUP landmarks
-```
-
-You can [read more about collection group queries](https://firebase.google.com/docs/firestore/query-data/queries#collection-group-query) in the official Firestore documentation.
-
-## Array membership queries
-It's as simple as using the `CONTAINS` condition:
-```sql
-SELECT *
-FROM posts
-WHERE tags CONTAINS 'interesting'
-```
-
-You can [read more about array membership queries](https://firebase.google.com/docs/firestore/query-data/queries#array_membership) in the official Firestore documentation.
-
-## How does FireQuery work?
-
-FireQuery transforms your SQL query into one or more queries to Firestore. Once all the necessary data has been retrieved, it does some internal processing in order to give you exactly what you asked for.
-
-For example, take the following SQL:
-```sql
-SELECT *
-FROM cities
-WHERE country = 'USA' AND population > 50000
-```
-This would get transformed into this single Firestore query:
-```js
-db.collection('cities')
-  .where('country', '==', 'USA')
-  .where('population', '>', 50000);
-```
-That's pretty straightforward. But what about this one?
-```sql
-SELECT *
-FROM cities
-WHERE country = 'USA' OR population > 50000
-```
-There's no direct way to perform an `OR` query on Firestore so FireQuery splits that into 2 separate queries:
-```js
-db.collection('cities').where('country', '==', 'USA');
-db.collection('cities').where('population', '>', 50000);
-```
-The results are then merged and any possible duplicates are eliminated.
-
-The same principle applies to any other query. Sometimes your SQL will result in a single Firestore query and some other times it might result in several.
-
-For example, take a seemingly simple SQL statement like the following:
-```sql
-SELECT *
-FROM cities
-WHERE country != 'Japan' AND region IN ('north', 'east', 'west') AND (capital = true OR population > 100000)
-```
-
-This will need to launch a total of 12 concurrent queries to Firestore!
-```js
-const cities = db.collection('cities');
-cities.where('country', '<', 'Japan').where('region', '==', 'north').where('capital', '==', true);
-cities.where('country', '<', 'Japan').where('region', '==', 'north').where('population', '>', 100000);
-cities.where('country', '<', 'Japan').where('region', '==', 'east').where('capital', '==', true);
-cities.where('country', '<', 'Japan').where('region', '==', 'east').where('population', '>', 100000);
-cities.where('country', '<', 'Japan').where('region', '==', 'west').where('capital', '==', true);
-cities.where('country', '<', 'Japan').where('region', '==', 'west').where('population', '>', 100000);
-cities.where('country', '>', 'Japan').where('region', '==', 'north').where('capital', '==', true);
-cities.where('country', '>', 'Japan').where('region', '==', 'north').where('population', '>', 100000);
-cities.where('country', '>', 'Japan').where('region', '==', 'east').where('capital', '==', true);
-cities.where('country', '>', 'Japan').where('region', '==', 'east').where('population', '>', 100000);
-cities.where('country', '>', 'Japan').where('region', '==', 'west').where('capital', '==', true);
-cities.where('country', '>', 'Japan').where('region', '==', 'west').where('population', '>', 100000);
-```
-As you can see, SQL offers a very concise and powerful way to express your query. But as they say, ***with great power comes great responsibility***. Always be mindful of the underlying data model when using FireQuery.
-
-## Examples of supported queries:
+FireQuery is smart, but not magical: queries using `OR`, `IN`, or `!=` may trigger multiple parallel queries to Firestore. Use with awareness of your data model.
 
 ```sql
-SELECT *
-FROM restaurants
+SELECT * FROM cities
+WHERE country != 'Japan' AND region IN ('north', 'south')
 ```
 
-```sql
-SELECT name, price
-FROM restaurants
-WHERE city = 'Chicago'
-```
+This may generate several query combinations under the hood.
 
-```sql
-SELECT *
-FROM restaurants
-WHERE category = 'Indian' AND price < 50
-```
+---
 
-```sql
-SELECT *
-FROM restaurants
-WHERE name LIKE 'Best%'
-```
+## Author
 
-```sql
-SELECT *
-FROM restaurants
-WHERE name LIKE 'Best%' OR city = 'Los Angeles'
-```
+Based on the original [FireSQL](https://firesql.firebaseapp.com/) project, adapted for PostgreSQL syntax and extended DML support.
 
-```sql
-SELECT *
-FROM restaurants
-WHERE city IN ( 'Raleigh', 'Nashvile', 'Denver' )
-```
+---
 
-```sql
-SELECT *
-FROM restaurants
-WHERE city != 'Oklahoma'
-```
+## License
 
-```sql
-SELECT *
-FROM restaurants
-WHERE favorite = true
-```
-
-```sql
-SELECT *
-FROM restaurants
-WHERE favorite -- Equivalent to the previous one
-```
-
-```sql
-SELECT *
-FROM restaurants
-WHERE favorite IS NULL
-```
-
-```sql
-SELECT AVG(price) AS averagePriceInChicago
-FROM restaurants
-WHERE city = 'Chicago'
-```
-
-```sql
-SELECT city, MIN(price), AVG(price), MAX(price)
-FROM restaurants
-WHERE category = 'Indian'
-GROUP BY city
-```
-
-```sql
-SELECT *
-FROM restaurants
-WHERE city = 'Memphis' AND ( price < 40 OR avgRating > 8 )
-ORDER BY price DESC, avgRating
-```
-
-```sql
-SELECT *
-FROM restaurants
-WHERE price BETWEEN 25 AND 150
-ORDER BY city, price
-LIMIT 10
-```
-
-```sql
-SELECT *
-FROM restaurants
-WHERE city = 'Chicago'
-UNION
-SELECT *
-FROM restaurants
-WHERE price > 200
-```
+MIT
