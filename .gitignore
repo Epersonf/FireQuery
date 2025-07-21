@@ -1,7 +1,6 @@
 node_modules
 .DS_Store
 *.log
-.vscode
 .idea
 out/
 release/
@@ -11,3 +10,4 @@ config/test.config.json
 src/sql-parser/original.pegjs
 src/sql-parser/index.js
 package-lock.json
+.env

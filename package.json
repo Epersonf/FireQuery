@@ -30,7 +30,8 @@
   },
   "scripts": {
     "peg": "peggy --plugin ts-pegjs --extra-options-file pegjs.config.json -o src/sql-parser/index.ts src/sql-parser/firequery.gram",
-    "build": "tsc --module commonjs && rollup -c rollup.config.mjs"
+    "build": "tsc --module commonjs && rollup -c rollup.config.mjs",
+    "test": "vitest"
   },
   "prettier": {
     "semi": true,
@@ -65,10 +66,12 @@
     "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",
     "ts-pegjs": "^4.2.1",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
   },
   "dependencies": {
-    "core-js": "^3.44.0"
+    "core-js": "^3.44.0",
+    "dotenv": "^17.2.0"
   },
   "peerDependencies": {
     "@google-cloud/firestore": "*",

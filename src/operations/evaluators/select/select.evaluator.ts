@@ -1,4 +1,4 @@
-import { DocumentData, DocumentReference, Firestore } from "@google-cloud/firestore";
+import { DocumentData, Firestore } from "@google-cloud/firestore";
 import { SelectStmtLite, OrderByExpr } from "./select-stmt.int";
 
 export class SelectEvaluator {
@@ -12,6 +12,19 @@ export class SelectEvaluator {
     }
 
     let query: FirebaseFirestore.Query = ref.collection(collectionName);
+
+    // SELECT columns
+    if (stmt.columns && Array.isArray(stmt.columns)) {
+      const fields = stmt.columns
+        .map(col => col.expr?.type === 'column_ref' ? col.expr.column : null)
+        .filter((c): c is string => !!c);
+
+      const isSelectAll = fields.includes('*');
+
+      if (!isSelectAll && fields.length > 0) {
+        query = query.select(...fields);
+      }
+    }
 
     // ORDER BY
     if (stmt.orderby?.length) {
