@@ -13,7 +13,7 @@ export class UpdateEvaluator {
     ref: Firestore,
   ): Promise<DocumentData[]> {
     const t = stmt as unknown as UpdateStmtLite;
-    const collectionName = t.table?.[0]?.db;
+    const collectionName = t.table?.[0]?.db ?? t.table?.[0]?.table;
     if (!collectionName) throw new Error("Missing collection name in UPDATE.");
 
     let query: FirebaseFirestore.Query = ref.collection(collectionName);

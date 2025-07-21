@@ -1,5 +1,5 @@
-import { DocumentData, DocumentReference, Firestore } from "@google-cloud/firestore";
-import { FunctionExprLite, InsertStmtLite, LiteralExprLite } from "./insert-stmt.int";
+import { DocumentData, Firestore } from "@google-cloud/firestore";
+import { BinaryExprLite, FunctionExprLite, InsertStmtLite, LiteralExprLite } from "./insert-stmt.int";
 import { ProcStmt } from "../../../sql-parser";
 
 export class InsertEvaluator {
@@ -7,8 +7,8 @@ export class InsertEvaluator {
     stmt: ProcStmt,
     ref: Firestore,
   ): Promise<DocumentData[]> {
-    const t = stmt as any as InsertStmtLite;
-    const collectionName = t.table?.[0]?.db;
+    const t = stmt as unknown as InsertStmtLite;
+    const collectionName = t.table?.[0]?.db ?? t.table?.[0]?.table;
     if (!collectionName) throw new Error("Missing collection name in INSERT.");
 
     const collection = ref.collection(collectionName);
@@ -16,17 +16,18 @@ export class InsertEvaluator {
 
     for (const exprList of t.values) {
       const data: DocumentData = {};
+      const values = exprList.value ?? [];
 
-      t.columns.forEach((col, i) => {
-        const expr = exprList.value[i];
-        const value = InsertEvaluator.resolveValue(expr.left);
-        data[col.name] = value;
-      });
+      for (let i = 0; i < t.columns.length; i++) {
+        const col = t.columns[i];
+        const expr = values[i];
+        if (!expr) {
+          throw new Error(`Missing value for column '${col}' at index ${i}`);
+        }
+        data[col] = this.resolveValue(expr);
+      }
 
-      const docRef = data.id
-        ? collection.doc(data.id)
-        : collection.doc();
-
+      const docRef = data.id ? collection.doc(data.id) : collection.doc();
       await docRef.set(data, { merge: true });
       rows.push({ id: docRef.id, ...data });
     }
@@ -34,15 +35,38 @@ export class InsertEvaluator {
     return rows;
   }
 
-  private static resolveValue(expr: LiteralExprLite | FunctionExprLite): any {
+  private static resolveValue(expr: BinaryExprLite | LiteralExprLite | FunctionExprLite): any {
+    if (!expr || typeof expr.type !== 'string') {
+      throw new Error(`Invalid expression node: ${JSON.stringify(expr)}`);
+    }
+
     switch (expr.type) {
       case "single_quote_string":
+        return expr.value;
       case "number":
         return expr.value;
       case "function":
-        return InsertEvaluator.evaluateFunction(expr.name);
+        return this.evaluateFunction(expr.name);
+      case "binary_expr":
+        if (!expr.left || !expr.right) {
+          throw new Error(`Invalid binary expression: ${JSON.stringify(expr)}`);
+        }
+
+        const left = this.resolveValue(expr.left);
+        const right = this.resolveValue(expr.right);
+        const op = expr.operator;
+
+        switch (op) {
+          case "+": return left + right;
+          case "-": return left - right;
+          case "*": return left * right;
+          case "/": return left / right;
+          case "%": return left % right;
+          default:
+            throw new Error(`Unsupported operator in binary expression: ${op}`);
+        }
       default:
-        throw new Error(`Unsupported expression type: ${(expr as any).type}`);
+        throw new Error('Unsupported value type');
     }
   }
 

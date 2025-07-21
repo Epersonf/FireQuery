@@ -5,9 +5,7 @@ export type InsertStmtLite = {
     table: string | undefined;
     as: string | null;
   }[];
-  columns: {
-    name: string;
-  }[];
+  columns: string[];
   values: ExprListLite[];
   partition?: string;
   returning?: string;
