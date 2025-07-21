@@ -1,6 +1,11 @@
 export type DeleteStmtLite = {
   type: "delete";
-  table: string;
+  table: {
+    db: string;
+    table: string;
+    as: string;
+    addition: boolean;
+  }[];
   from: {
     db: string;
     table: string | undefined;

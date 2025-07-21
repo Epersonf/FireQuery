@@ -8,7 +8,7 @@ export class DeleteEvaluator {
     ref: Firestore,
   ): Promise<DocumentData[]> {
     const t = stmt as unknown as DeleteStmtLite;
-    const collectionName = t.from?.[0]?.db;
+    const collectionName = t.from.at(0)?.table ?? t.table.at(0)?.table;
     if (!collectionName) throw new Error("Missing collection name in DELETE.");
 
     let query: FirebaseFirestore.Query = ref.collection(collectionName);
