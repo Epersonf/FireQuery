@@ -1,5 +1,4 @@
 import { Query } from '@google-cloud/firestore';
-import { SQL_Value, SQL_AggrFunction } from './sql-parser';
 import { Observable } from 'rxjs';
 
 export type DocumentData = { [field: string]: any };
@@ -37,26 +36,6 @@ export function deepGet(obj: any, path: string): any {
   return value;
 }
 
-export function astValueToNative(
-  astValue: SQL_Value
-): boolean | string | number | null {
-  let value: boolean | string | number | null;
-
-  switch (astValue.type) {
-    case 'bool':
-    case 'null':
-    case 'string':
-      value = astValue.value;
-      break;
-    case 'number':
-      value = Number(astValue.value);
-      break;
-    default:
-      throw new Error('Unsupported value type in WHERE clause.');
-  }
-
-  return value;
-}
 /**
  * Adapted from: https://github.com/firebase/firebase-ios-sdk/blob/14dd9dc2704038c3bf702426439683cee4dc941a/Firestore/core/src/firebase/firestore/util/string_util.cc#L23-L40
  */
@@ -79,22 +58,6 @@ export function prefixSuccessor(prefix: string): string {
     }
   }
   return limit;
-}
-
-export function nameOrAlias(
-  name: string,
-  alias: string | null,
-  aggrFn?: SQL_AggrFunction
-): string {
-  if (alias !== null && alias.length > 0) {
-    return alias;
-  }
-
-  if (!aggrFn) {
-    return name;
-  }
-
-  return `${aggrFn.name}(${name})`;
 }
 
 export function collectionData<T = DocumentData>(

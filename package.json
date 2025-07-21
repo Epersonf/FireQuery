@@ -29,8 +29,8 @@
     "node": ">=20.0.0"
   },
   "scripts": {
-    "pegjs": "pegjs --extra-options-file pegjs.config.json",
-    "build": "npm run pegjs && tsc --module commonjs && rollup -c rollup.config.mjs"
+    "peg": "peggy --plugin ts-pegjs --extra-options-file pegjs.config.json -o src/sql-parser/index.ts src/sql-parser/firequery.gram",
+    "build": "npm run peg && tsc --module commonjs && rollup -c rollup.config.mjs"
   },
   "prettier": {
     "semi": true,
@@ -54,7 +54,7 @@
     "jest-config": "^30.0.4",
     "lodash.camelcase": "^4.3.0",
     "log-update": "^6.1.0",
-    "pegjs": "0.11.0-master.30f3260",
+    "pegjs": "^0.11.0-master.30f3260",
     "prettier": "^3.6.2",
     "prompt": "^1.3.0",
     "prompt-input": "^3.0.0",
@@ -64,6 +64,7 @@
     "rxjs": "^7.8.2",
     "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",
+    "ts-pegjs": "^4.2.1",
     "typescript": "^5.8.3"
   },
   "dependencies": {
