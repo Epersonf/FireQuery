@@ -26,30 +26,54 @@ export class UpdateEvaluator {
     const updated: DocumentData[] = [];
 
     for (const doc of snapshot.docs) {
-      const data: Record<string, any> = {};
+      const current = doc.data();
+      const updateData: Record<string, any> = {};
 
       for (const assignment of t.set) {
         const field = assignment.column;
-        const value = UpdateEvaluator.resolveExpr(assignment.value);
-        data[field] = value;
+        const value = UpdateEvaluator.resolveExpr(assignment.value, current);
+        updateData[field] = value;
       }
 
-      await doc.ref.update(data);
-      updated.push({ id: doc.id, ...doc.data(), ...data });
+      await doc.ref.update(updateData);
+      updated.push({ id: doc.id, ...current, ...updateData });
     }
 
     return updated;
   }
 
-  private static resolveExpr(expr: Expr): any {
+  private static resolveExpr(expr: Expr, doc?: DocumentData): any {
+    if (!expr || typeof expr.type !== 'string') {
+      throw new Error(`Invalid expression node: ${JSON.stringify(expr)}`);
+    }
+
     switch (expr.type) {
-      case "single_quote_string":
-      case "number":
-      case "bool":
-      case "null":
+      case 'single_quote_string':
+      case 'number':
+      case 'bool':
         return expr.value;
-      case "function":
+
+      case 'function':
         return UpdateEvaluator.evaluateFunction(expr);
+
+      case 'column_ref':
+        if (!doc) throw new Error("column_ref requires current document context");
+        return doc[expr.column];
+
+      case 'binary_expr': {
+        const left = this.resolveExpr(expr.left, doc);
+        const right = this.resolveExpr(expr.right, doc);
+        switch (expr.operator) {
+          case '+': return left + right;
+          case '-': return left - right;
+          case '*': return left * right;
+          case '/': return left / right;
+          case '%': return left % right;
+          default:
+            throw new Error(`Unsupported operator in SET binary_expr: ${expr.operator}`);
+        }
+      }
+
       default:
         throw new Error(`Unsupported value in SET: ${expr.type}`);
     }
