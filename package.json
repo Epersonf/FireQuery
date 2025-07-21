@@ -30,7 +30,7 @@
   },
   "scripts": {
     "peg": "peggy --plugin ts-pegjs --extra-options-file pegjs.config.json -o src/sql-parser/index.ts src/sql-parser/firequery.gram",
-    "build": "npm run peg && tsc --module commonjs && rollup -c rollup.config.mjs"
+    "build": "tsc --module commonjs && rollup -c rollup.config.mjs"
   },
   "prettier": {
     "semi": true,

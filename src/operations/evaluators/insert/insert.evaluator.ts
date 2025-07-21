@@ -1,17 +1,17 @@
-import { DocumentData, DocumentReference } from "@google-cloud/firestore";
+import { DocumentData, DocumentReference, Firestore } from "@google-cloud/firestore";
 import { FunctionExprLite, InsertStmtLite, LiteralExprLite } from "./insert-stmt.int";
 import { ProcStmt } from "../../../sql-parser";
 
 export class InsertEvaluator {
   static async execute(
     stmt: ProcStmt,
-    ref: DocumentReference
+    ref: Firestore,
   ): Promise<DocumentData[]> {
     const t = stmt as any as InsertStmtLite;
     const collectionName = t.table?.[0]?.db;
     if (!collectionName) throw new Error("Missing collection name in INSERT.");
 
-    const collection = ref.firestore.collection(collectionName);
+    const collection = ref.collection(collectionName);
     const rows: DocumentData[] = [];
 
     for (const exprList of t.values) {

@@ -1,4 +1,4 @@
-import { DocumentData, DocumentReference } from "@google-cloud/firestore";
+import { DocumentData, Firestore } from "@google-cloud/firestore";
 import { Start } from "../sql-parser";
 import { SelectEvaluator } from "./evaluators/select/select.evaluator";
 import { InsertEvaluator } from "./evaluators/insert/insert.evaluator";
@@ -6,26 +6,35 @@ import { UpdateEvaluator } from "./evaluators/update/update.evaluator";
 import { DeleteEvaluator } from "./evaluators/delete/delete.evaluator";
 
 export class ASTEvaluator {
-  static async evaluate<T>(
-    ast: Start,
-    ref: DocumentReference,
-  ): Promise<T[] | DocumentData[]> {
-    if (!Array.isArray(ast)) throw new Error("Expected AST to be an array");
+  static async evaluate(
+    start: Start,
+    db: Firestore,
+  ): Promise<DocumentData[]> {
+    const rawAst = (start as any).ast;
 
-    const results: T[] | DocumentData[] = [];
+    // Normaliza para array
+    const ast = Array.isArray(rawAst) ? rawAst : [rawAst];
+
+    console.log(`Running AST evaluator for ${JSON.stringify(start)}`);
+
+    const results: DocumentData[] = [];
 
     for (const stmt of ast) {
       if (typeof stmt !== "object" || stmt === null || stmt.type === "proc") continue;
 
       switch (stmt.type) {
         case "select":
-          return await SelectEvaluator.execute(stmt, ref);
+          results.push(...await SelectEvaluator.execute(stmt, db));
+          break;
         case "insert":
-          return await InsertEvaluator.execute(stmt, ref);
+          results.push(...await InsertEvaluator.execute(stmt, db));
+          break;
         case "update":
-          return await UpdateEvaluator.execute(stmt, ref);
+          results.push(...await UpdateEvaluator.execute(stmt, db));
+          break;
         case "delete":
-          return await DeleteEvaluator.execute(stmt, ref);
+          results.push(...await DeleteEvaluator.execute(stmt, db));
+          break;
         default:
           throw new Error(`Unsupported SQL type: ${stmt.type}`);
       }

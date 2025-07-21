@@ -1,4 +1,4 @@
-import { DocumentData, DocumentReference } from "@google-cloud/firestore";
+import { DocumentData, Firestore } from "@google-cloud/firestore";
 import { ProcStmt } from "../../../sql-parser";
 import {
   UpdateStmtLite,
@@ -10,13 +10,13 @@ import { DeleteEvaluator } from "../delete/delete.evaluator";
 export class UpdateEvaluator {
   static async execute(
     stmt: ProcStmt,
-    ref: DocumentReference
+    ref: Firestore,
   ): Promise<DocumentData[]> {
     const t = stmt as unknown as UpdateStmtLite;
     const collectionName = t.table?.[0]?.db;
     if (!collectionName) throw new Error("Missing collection name in UPDATE.");
 
-    let query: FirebaseFirestore.Query = ref.firestore.collection(collectionName);
+    let query: FirebaseFirestore.Query = ref.collection(collectionName);
 
     if (t.where) {
       query = DeleteEvaluator["applyWhere"](query, t.where);

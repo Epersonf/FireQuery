@@ -1,17 +1,17 @@
-import { DocumentData, DocumentReference } from "@google-cloud/firestore";
-import { DeleteStmtLite, BinaryExprNode, Expr, ColumnRef, Literal, FunctionExpr, IntervalExpr, ExprList, SelectStmtLite } from "./delete-stmt.int";
+import { DocumentData, Firestore } from "@google-cloud/firestore";
+import { DeleteStmtLite, BinaryExprNode, Expr, Literal } from "./delete-stmt.int";
 import { ProcStmt } from "../../../sql-parser";
 
 export class DeleteEvaluator {
   static async execute(
     stmt: ProcStmt,
-    ref: DocumentReference
+    ref: Firestore,
   ): Promise<DocumentData[]> {
     const t = stmt as unknown as DeleteStmtLite;
     const collectionName = t.from?.[0]?.db;
     if (!collectionName) throw new Error("Missing collection name in DELETE.");
 
-    let query: FirebaseFirestore.Query = ref.firestore.collection(collectionName);
+    let query: FirebaseFirestore.Query = ref.collection(collectionName);
 
     if (t.where) {
       query = DeleteEvaluator.applyWhere(query, t.where);

@@ -1,24 +1,21 @@
-import { DocumentData, DocumentReference } from "@google-cloud/firestore";
+import { DocumentData, DocumentReference, Firestore } from "@google-cloud/firestore";
 import { SelectStmtLite, OrderByExpr } from "./select-stmt.int";
-import { ProcStmt, Start } from "../../../sql-parser";
 
 export class SelectEvaluator {
   static async execute(
-    stmt: ProcStmt,
-    ref: DocumentReference
+    stmt: SelectStmtLite,
+    ref: Firestore,
   ): Promise<DocumentData[]> {
-    const t = stmt as unknown as SelectStmtLite;
-
-    const collectionName = t.from?.[0]?.db;
+    const collectionName = stmt.from?.[0]?.db ?? stmt.from?.[0]?.table;
     if (!collectionName) {
       throw new Error("Missing collection name in FROM clause.");
     }
 
-    let query: FirebaseFirestore.Query = ref.firestore.collection(collectionName);
+    let query: FirebaseFirestore.Query = ref.collection(collectionName);
 
     // ORDER BY
-    if (t.orderby?.length) {
-      for (const order of t.orderby) {
+    if (stmt.orderby?.length) {
+      for (const order of stmt.orderby) {
         const col = SelectEvaluator.extractColumnName(order);
         if (col) {
           query = query.orderBy(col, order.type?.toLowerCase() as FirebaseFirestore.OrderByDirection);
@@ -27,7 +24,7 @@ export class SelectEvaluator {
     }
 
     // LIMIT / OFFSET
-    const limitArgs = t.limit?.value ?? [];
+    const limitArgs = stmt.limit?.value ?? [];
     const [limitNode, offsetNode] = limitArgs;
     if (limitNode?.type === "number") {
       query = query.limit(limitNode.value);
@@ -42,6 +39,9 @@ export class SelectEvaluator {
 
   private static extractColumnName(order: OrderByExpr): string | undefined {
     const expr = order.expr;
+    if (expr?.type === "column_ref") {
+      return expr.column;
+    }
     if (expr?.type === "binary_expr" && expr.left?.type === "column_ref") {
       return expr.left.column;
     }
